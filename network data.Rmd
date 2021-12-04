@@ -120,20 +120,23 @@ Obviously, these two types of networks (empty and full) are the extremes, but th
 
 Most real life networks are structured quite differently from empty and full networks. Let's explore a few important cases where network structure matters and talk a little bit about how they came to be and why they matter.
 
+### Erdos-Renyi Networks: So Random
 
 
 
-## It's All a Game
 
-You can create networks that have many different structures within igraph. Within igraph, the way to simulate these different types of networks are called 'games'.
+### Barabasi-Albert: The Rich Get Richer
 
-Lets look at a few games:
 
-```{r}
+### Watts-Strogatz: Its a Small World After All
 
-```
 
-## Describing Network Statistics
+
+
+
+
+
+# Describing Network Statistics
 
 Networks are meant for more than just pretty figures! They can give us genuine insight into the importance of different nodes through the use of different network statistics.
 
@@ -149,6 +152,14 @@ There are many different types of network statistics, but a few important ones a
 
 
 Lets create a network and use these different statistics to gain insight into how the different metrics can be used to describe epidemics:
+
+
+
+
+
+
+# Bipartite Networks
+
 
 
 
