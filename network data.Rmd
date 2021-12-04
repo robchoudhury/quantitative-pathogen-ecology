@@ -1,0 +1,165 @@
+---
+title: "Network Analysis"
+author: "Robin Choudhury and Neil McRoberts"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+    toc_depth: 6
+    number_sections: true
+---
+
+# What are Networks?
+
+At their most basic, networks are ways that we can describe relationships between things. Networks emerge from a field of mathematics known as 'graph theory', which is focused on describing the mathematical structures used to model pairwise relations between objects. Graphs are composed of vertices (also sometimes called 'nodes' or 'points') and edges (also sometimes called 'links' or 'lines'). The package igraph uses the terms 'vertex' and 'edge', so for simplicity sake I am going to try to use those terms, but I might accidentally switch back and forth, mea culpa. When characterizing these relationships, they can be directed (where one partner may influence the other, but not vice versa) or undirected (where both partners are equally influenced by the relationship). There can also be weighted graphs, where the amount of connection through edges can vary between different pairs of vertices. Depending on how much you know about the epidemic and how well you've characterized the network associated with the outbreak, you may gain valuable insight from using different types of networks.
+
+![](https://lh3.googleusercontent.com/proxy/pHzQi2mE7JuqkjcOx9zOnGybuNaN9f0Q7R9XPVZsApNYelv-gGxue-uPuwsyneXQMpwr59bZXNSeTJv1oFWnMc_M1rSrfr0BlvfGa47wbQL3TDA)
+
+
+
+# Why Study Networks?
+
+Networks are a really useful way to describe systems that are heterogeneous, where spread of information or disease may not occur in a uniform fashion and that relationship factors like proximity, age, or treatment status might impact how disease will flow throughout a population. This is a distinct advantage over state diagram models (IMO) in some cases, especially if you know more about the structure of how the system is set up (e.g. how the disease is spreading). Although accurately characterizing a network can be challenging, it is possible to model different scenarios for how networks may be structured and use those scenarios to model different epidemic outcome possibilities. Networks are also more than just pretty figures! They can be analyzed to determine different features of the individuals inside of the network. These network analyses can help to identify individuals that may be critical for the spread or control of disease.
+
+
+# Install and Load igraph, a Network Analysis Package
+
+The [igraph package](https://igraph.org/r/) is a fairly well documented package that is written in C and has implementations in Python and R. We are also going to use the package [igraphdata](https://cran.r-project.org/web/packages/igraphdata/README.html), as they will be instructive for different kinds of analyses we might want to do. The igraph package can handle many different network related tasks, including creating and manipulating graphs and analyzing networks. I (RAC) used igraph extensively during my postdoctoral research with [Dr. Karen Garrett](https://plantpath.ifas.ufl.edu/people/faculty-pages/karen-garrett/) at UF, where we used networks to analyze social and biophysical networks related to epidemics. The package can be kind of fidgety and the figures that it produces can be rudimentary (if you're not well-versed in how to spruce up Base R graphing), but overall the package is a workhorse and is capable of most of the tasks that you will need if you perform network analysis.
+
+
+
+```{r package installation}
+knitr::opts_chunk$set(echo = TRUE)
+#install.packages(c("igraph", "igraphdata")) #in case you haven't already
+library(igraph)
+library(igraphdata)
+```
+
+
+# Using Adjacency Matrices to Describe Graphs
+
+Adjacency matrices are square matrices that describe a network, with each element representing an edge between two vertices. In weighted networks, these adjacency matrices can also describe the strength of the connection. Lets use igraph to make a small adjacency matrix:
+
+```{r adjacency matrix to graph}
+mat1 <- matrix(c(0,0,1,1,0,0,1,0,0), nrow=3, ncol=3) ### matrix function 
+mat1
+```
+
+Here we see that the matrix can be read from left to right, with rows representing which vertex the edge is coming **from** and columns representing which vertex the edge is going **to.** For instance, we see an edge connection going **from** vertex 3 **to** vertex 1.
+
+![](https://raw.githubusercontent.com/robchoudhury/robchoudhury.github.io/master/public/img/img_ucd/adjacency%20matrix.PNG)
+
+
+
+Now lets turn that adjacency matrix into a usable format using the igraph function *graph_from_adjacency_matrix()* to create a network object, and then use Base R plotting to create a plot:
+
+```{r network from adjacency matrix}
+mat2 <- graph_from_adjacency_matrix(mat1)
+plot(mat2)
+```
+
+Here we see a network with three vertices and three edges, with connections from 1 -> 2, 1 -> 3, and 3 -> 1. That makes this graph a *directed network*. 
+
+
+You can also create a graph using only edges rather than listing out the entire adjacency matrix.
+
+```{r just links}
+mat3 <- graph(edges=c(1,2, 1,3, 3,1), n=3, directed=T ) # use graph function and list edges 
+plot(mat3, edge.arrow.size = 1)
+```
+
+Here, we were able to describe the three edges (1 -> 2, 1 -> 3, and 3 -> 1) using only the names of the nodes that would be connected. This can work well if you only have the edges (like in a fairly sparse matrix), where you may have only a few connections in a relatively large network. This can also work well in cases where you are working with directed networks from epidemiological data (imagine a dataset of COVID contact tracebacks, where you may have a list of people the infected person interacted with in a given time frame). In other cases, it might just be easier to describe the adjacency matrix.
+
+
+## Self Loops: What's on the Diagonal?
+
+In addition to having vertices connect with other vertices in a pairwise fashion, you can also have a vertex connect with itself. These self connections are called 'self loops'. When we examine an adjacency matrix, we can look to see if a network has self loops by looking at the diagonal, to see if there is a connection from [1,] to [,1], for instance.
+
+```{r}
+mat1L <- matrix(c(1,0,1,1,0,0,1,0,0), nrow=3, ncol=3) ### matrix function 
+mat1L
+mat2L <- graph_from_adjacency_matrix(mat1L)
+plot(mat2L)
+```
+
+In this example, you can see that there is a self loop for vertex 1, but no self loops for vertex 2 or 3. 
+
+Self loops look pretty messy on most igraph plots, but they can be very important when considering an epidemic as they can tell you a lot about whether an infected vertex will stay infected throughout an epidemic. We'll see that more when we discuss using networks to model epidemics.
+
+## Undirected Networks
+
+```{r undirected}
+mat1U <- matrix(c(0,1,1,
+                  1,0,0,
+                  1,0,0), nrow=3, ncol=3) ### matrix function 
+mat1U
+mat2U <- graph_from_adjacency_matrix(mat1U, mode = "undirected")
+plot(mat2U)
+```
+
+Here we see an *undirected network* which is symmetrical along the diagonal. That means that for every connection that goes from 1 -> 3, there is a connection that goes from 3 -> 1 and so forth. Undirected networks are useful in epidemiology if there is no explicit information on which direction spread might be going or if there is equal opportunity for spread to go in both directions.
+
+## Empty and Full Networks
+
+You can create networks that have no links or networks that are fully connected (every possible link):
+
+```{r}
+eg <- make_empty_graph(45) ## make a graph with 50 nodes
+plot(eg, vertex.size=10, vertex.label=NA, vertex.color = "red") ## no node labels.
+fg <- make_full_graph(45)
+plot(fg, vertex.size=10, vertex.label=NA, vertex.color = "red")
+```
+
+Obviously, these two types of networks (empty and full) are the extremes, but they can be useful to think about when considering how network are plotted and structured. In both of these examples, each node in the network is as important as every other node; they all either link to no other nodes or every other node. We will see this importance in a later section when we discuss network metrics of connectance.
+
+
+
+## ... And Everything In-Between
+
+Most real life networks are structured quite differently from empty and full networks. Let's explore a few important cases where network structure matters and talk a little bit about how they came to be and why they matter.
+
+
+
+
+## It's All a Game
+
+You can create networks that have many different structures within igraph. Within igraph, the way to simulate these different types of networks are called 'games'.
+
+Lets look at a few games:
+
+```{r}
+
+```
+
+## Describing Network Statistics
+
+Networks are meant for more than just pretty figures! They can give us genuine insight into the importance of different nodes through the use of different network statistics.
+
+There are many different types of network statistics, but a few important ones are:
+
+- Degree centrality- The number of links a node has to other nodes in the network (both incoming and outgoing)
+
+- Eigenvectory centrality- A weighted sum reflecting both direct links to a node (degree) and the node degree of neighbors
+
+- Betweenness centrality- The number of shortest paths through the network of which a node is a part
+
+- Closeness centrality- The inverse of the average length of the shortest path to/from all the other nodes in the network
+
+
+Lets create a network and use these different statistics to gain insight into how the different metrics can be used to describe epidemics:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
