@@ -106,10 +106,11 @@ Here we see an *undirected network* which is symmetrical along the diagonal. Tha
 You can create networks that have no links or networks that are fully connected (every possible link):
 
 ```{r}
-eg <- make_empty_graph(45) ## make a graph with 50 nodes
-plot(eg, vertex.size=10, vertex.label=NA, vertex.color = "red") ## no node labels.
-fg <- make_full_graph(45)
-plot(fg, vertex.size=10, vertex.label=NA, vertex.color = "red")
+eg <- make_empty_graph(25) ## make a graph with 50 nodes
+coords <- layout_(eg, in_circle())
+plot(eg, vertex.size=10, vertex.label=NA, vertex.color = "red", layout = coords) ## no node labels.
+fg <- make_full_graph(25)
+plot(fg, vertex.size=10, vertex.label=NA, vertex.color = "red", layout = coords)
 ```
 
 Obviously, these two types of networks (empty and full) are the extremes, but they can be useful to think about when considering how network are plotted and structured. In both of these examples, each node in the network is as important as every other node; they all either link to no other nodes or every other node. We will see this importance in a later section when we discuss network metrics of connectance.
@@ -125,13 +126,53 @@ Most real life networks are structured quite differently from empty and full net
 
 
 
+
+
+```{r erdos renyi}
+er <- erdos.renyi.game(25, 1/10)
+plot(er, vertex.size=10, vertex.label=NA, vertex.color = "red", layout = coords)
+```
+
+
+
+
 ### Barabasi-Albert: The Rich Get Richer
 
+
+
+```{r}
+ba <- barabasi.game(25)
+plot(ba, vertex.size=10, vertex.label=NA, vertex.color = "red", layout = coords)
+```
+
+
+#### Layouts
+
+Now lets look at the *same graph*, but using a slightly different layout algorithm. When we set up our previous graphs, I wanted you to be able to see the differences between the graphs easily, so I set the coordinates of the graphs to be the same (*coords* in the code above). But igraph natively uses the Fruchterman-Reingold layout algorithm, which is a force directed layout algorithm that puts nodes on a plane. This makes it a bit easier to see the preferential attachment that is characteristic of the Barabasi Albert algorithm.
+
+
+
+```{r}
+plot(ba, vertex.size=10, vertex.label=NA, vertex.color = "red")
+```
 
 ### Watts-Strogatz: Its a Small World After All
 
 
 
+
+
+```{r}
+ba <- watts.strogatz.game()
+ws <- sample_smallworld(dim = 1, size = 25, nei = 4, p = 0.05)
+
+plot(ws, vertex.size=10, vertex.label=NA, vertex.color = "red", layout = coords)
+```
+
+
+```{r}
+plot(ws, vertex.size=10, vertex.label=NA, vertex.color = "red")
+```
 
 
 
@@ -142,23 +183,17 @@ Networks are meant for more than just pretty figures! They can give us genuine i
 
 There are many different types of network statistics, but a few important ones are:
 
-- Degree centrality- The number of links a node has to other nodes in the network (both incoming and outgoing)
+## Degree Centrality 
 
-- Eigenvectory centrality- A weighted sum reflecting both direct links to a node (degree) and the node degree of neighbors
-
-- Betweenness centrality- The number of shortest paths through the network of which a node is a part
-
-- Closeness centrality- The inverse of the average length of the shortest path to/from all the other nodes in the network
-
-
-Lets create a network and use these different statistics to gain insight into how the different metrics can be used to describe epidemics:
+The number of links a node has to other nodes in the network (both incoming and outgoing)
 
 
 
 
 
+## Eigenvector Centrality 
 
-# Bipartite Networks
+A weighted sum reflecting both direct links to a node (degree) and the node degree of neighbors
 
 
 
@@ -166,11 +201,33 @@ Lets create a network and use these different statistics to gain insight into ho
 
 
 
+## Betweenness Centrality 
+
+The number of shortest paths through the network of which a node is a part
+
+
+
+
+
+## Closeness Centrality 
+
+The inverse of the average length of the shortest path to/from all the other nodes in the network
 
 
 
 
 
 
+## Thanks and Acknowledgments
+
+This document draws heavily from a workshop put on by Karen Garrett and her lab at the 2018 ICPP Meeting in Boston. You can find more info on the workshop here: https://kelseyandersen.github.io/NetworksPlantPathology/index.html
+
+
+
+## Session Info
+
+```{r}
+sessionInfo()
+```
 
 
