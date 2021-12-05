@@ -163,8 +163,7 @@ plot(ba, vertex.size=10, vertex.label=NA, vertex.color = "red")
 
 
 ```{r}
-ba <- watts.strogatz.game()
-ws <- sample_smallworld(dim = 1, size = 25, nei = 4, p = 0.05)
+ws <- watts.strogatz.game(dim = 1, size = 25, nei = 4, p = 0.05)
 
 plot(ws, vertex.size=10, vertex.label=NA, vertex.color = "red", layout = coords)
 ```
@@ -185,7 +184,12 @@ There are many different types of network statistics, but a few important ones a
 
 ## Degree Centrality 
 
-The number of links a node has to other nodes in the network (both incoming and outgoing)
+One of the most commonly used metrics in characterizing networks is degree centrality, which measures the number of links a node has to other nodes in the network. Directed networks have two subcategories: in degree and out degree, referring to how many links are going in and out from a node, respectively. This metric has been used for a long time because it's fairly easy to assess (just count the number of links, no real math or equations!) but can miss out on subtle important features of an epidemic, like how important the neighbors are or where the node is in an network. Let's look back on the five graphs from earlier (empty, full, random, preferential attachment, and small world) and see how this metric characterizes the nodes for each.
+
+```{r}
+
+```
+
 
 
 
