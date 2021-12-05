@@ -183,7 +183,7 @@ There are many different types of network statistics, but a few important ones a
 
 One of the most commonly used metrics in characterizing networks is degree centrality, which measures the number of links a node has to other nodes in the network. Directed networks have two subcategories: in degree and out degree, referring to how many links are going in and out from a node, respectively. This metric has been used for a long time because it's fairly easy to assess (just count the number of links, no real math or equations!) but can miss out on subtle important features of an epidemic, like how important the neighbors are or where the node is in an network. Let's look back on the five graphs from earlier (empty, full, random, preferential attachment, and small world) and see how this metric characterizes the nodes for each.
 
-```{r secret color chunk shhhh no one sees this degree, echo=F, warning=F, error=F}
+```{r secret color chunk shhhh no one sees this degree, echo=F, warning=F, error=F, results= F}
 
 #eg
 color_num = data.frame(unique = degree(eg)); color_num
@@ -250,7 +250,7 @@ A weighted sum reflecting both direct links to a node (degree) and the node degr
 
 The number of shortest paths through the network of which a node is a part. 
 
-```{r secret color chunk shhhh no one sees this betweenness, echo=F, warning=F, error=F}
+```{r secret color chunk shhhh no one sees this betweenness, echo=F, warning=F, error=F, results= F}
 
 #eg
 color_num = data.frame(unique = betweenness(eg)); color_num
@@ -312,7 +312,7 @@ plot(ws, vertex.size=10, vertex.label=NA,  layout = coords, main = "Betweenness:
 Closeness measures the inverse of the average length of the shortest path to/from all the other nodes in the network.
 
 
-```{r secret color chunk shhhh no one sees this closeness, echo=F, warning=F, error=F}
+```{r secret color chunk shhhh no one sees this closeness, echo=F, warning=F, error=F, results= F}
 
 #eg
 color_num = data.frame(unique = closeness(eg)); color_num
