@@ -15,7 +15,7 @@ output:
 
 At their most basic, networks are ways that we can describe relationships between things. Networks emerge from a field of mathematics known as 'graph theory', which is focused on describing the mathematical structures used to model pairwise relations between objects. Graphs are composed of vertices (also sometimes called 'nodes' or 'points') and edges (also sometimes called 'links' or 'lines'). The package igraph uses the terms 'vertex' and 'edge', so for simplicity sake I am going to try to use those terms, but I might accidentally switch back and forth, mea culpa. When characterizing these relationships, they can be directed (where one partner may influence the other, but not vice versa) or undirected (where both partners are equally influenced by the relationship). There can also be weighted graphs, where the amount of connection through edges can vary between different pairs of vertices. Depending on how much you know about the epidemic and how well you've characterized the network associated with the outbreak, you may gain valuable insight from using different types of networks.
 
-![](https://lh3.googleusercontent.com/proxy/pHzQi2mE7JuqkjcOx9zOnGybuNaN9f0Q7R9XPVZsApNYelv-gGxue-uPuwsyneXQMpwr59bZXNSeTJv1oFWnMc_M1rSrfr0BlvfGa47wbQL3TDA)
+![](https://raw.githubusercontent.com/robchoudhury/quantitative-pathogen-ecology/main/images/adjacency%20matrix%20network%20labeled.PNG)
 
 
 
@@ -32,9 +32,11 @@ The [igraph package](https://igraph.org/r/) is a fairly well documented package 
 
 ```{r package installation}
 knitr::opts_chunk$set(echo = TRUE)
-#install.packages(c("igraph", "igraphdata")) #in case you haven't already
+#install.packages(c("igraph", "igraphdata", "viridis","tidyverse")) #in case you haven't already
 library(igraph)
 library(igraphdata)
+library(viridis)
+library(tidyverse)
 ```
 
 
@@ -49,7 +51,7 @@ mat1
 
 Here we see that the matrix can be read from left to right, with rows representing which vertex the edge is coming **from** and columns representing which vertex the edge is going **to.** For instance, we see an edge connection going **from** vertex 3 **to** vertex 1.
 
-![](https://raw.githubusercontent.com/robchoudhury/robchoudhury.github.io/master/public/img/img_ucd/adjacency%20matrix.PNG)
+![](https://raw.githubusercontent.com/robchoudhury/quantitative-pathogen-ecology/main/images/adjacency%20matrix.PNG)
 
 
 
@@ -108,9 +110,9 @@ You can create networks that have no links or networks that are fully connected 
 ```{r}
 eg <- make_empty_graph(25) ## make a graph with 50 nodes
 coords <- layout_(eg, in_circle())
-plot(eg, vertex.size=10, vertex.label=NA, vertex.color = "red", layout = coords) ## no node labels.
+plot(eg, vertex.size=10, vertex.label=NA, vertex.color = "red", layout = coords, main = "Empty Graph") ## no node labels.
 fg <- make_full_graph(25)
-plot(fg, vertex.size=10, vertex.label=NA, vertex.color = "red", layout = coords)
+plot(fg, vertex.size=10, vertex.label=NA, vertex.color = "red", layout = coords, main = "Full Graph")
 ```
 
 Obviously, these two types of networks (empty and full) are the extremes, but they can be useful to think about when considering how network are plotted and structured. In both of these examples, each node in the network is as important as every other node; they all either link to no other nodes or every other node. We will see this importance in a later section when we discuss network metrics of connectance.
@@ -123,14 +125,14 @@ Most real life networks are structured quite differently from empty and full net
 
 ### Erdos-Renyi Networks: So Random
 
-
+The Erdos-Renyi networks are random graphs, where the number of connections between nodes is not based on any prior information about the nodes but rather based on drawing from a distribution.
 
 
 
 
 ```{r erdos renyi}
 er <- erdos.renyi.game(25, 1/10)
-plot(er, vertex.size=10, vertex.label=NA, vertex.color = "red", layout = coords)
+plot(er, vertex.size=10, vertex.label=NA, vertex.color = "red", layout = coords, main = "Erdos-Renyi Random")
 ```
 
 
@@ -138,11 +140,11 @@ plot(er, vertex.size=10, vertex.label=NA, vertex.color = "red", layout = coords)
 
 ### Barabasi-Albert: The Rich Get Richer
 
-
+Sometimes in networks (and in real life) there is preferential attachment, where individuals that already have connections gain more connections. Think about people on Twitter who you may follow not necessarily because they post good content but rather because they have a lot of followers already. 
 
 ```{r}
 ba <- barabasi.game(25)
-plot(ba, vertex.size=10, vertex.label=NA, vertex.color = "red", layout = coords)
+plot(ba, vertex.size=10, vertex.label=NA, vertex.color = "red", layout = coords, main = "Barabasi-Albert Preferential Attachment")
 ```
 
 
@@ -153,25 +155,20 @@ Now lets look at the *same graph*, but using a slightly different layout algorit
 
 
 ```{r}
-plot(ba, vertex.size=10, vertex.label=NA, vertex.color = "red")
+plot(ba, vertex.size=10, vertex.label=NA, vertex.color = "red", main = "Barabasi-Albert Preferential Attachment")
 ```
 
 ### Watts-Strogatz: Its a Small World After All
 
-
+The Watts-Strogratz model tests whether there was a 'small world' effect, where a few connections between widely separated nodes vastly reduces the overall diameter of the graph. This kind of falls back on the trope of "Six Degrees to Kevin Bacon".
 
 
 
 ```{r}
 ws <- watts.strogatz.game(dim = 1, size = 25, nei = 4, p = 0.05)
-
-plot(ws, vertex.size=10, vertex.label=NA, vertex.color = "red", layout = coords)
+plot(ws, vertex.size=10, vertex.label=NA, vertex.color = "red", layout = coords, main = "Watts Strogatz Small World")
 ```
 
-
-```{r}
-plot(ws, vertex.size=10, vertex.label=NA, vertex.color = "red")
-```
 
 
 
@@ -186,40 +183,218 @@ There are many different types of network statistics, but a few important ones a
 
 One of the most commonly used metrics in characterizing networks is degree centrality, which measures the number of links a node has to other nodes in the network. Directed networks have two subcategories: in degree and out degree, referring to how many links are going in and out from a node, respectively. This metric has been used for a long time because it's fairly easy to assess (just count the number of links, no real math or equations!) but can miss out on subtle important features of an epidemic, like how important the neighbors are or where the node is in an network. Let's look back on the five graphs from earlier (empty, full, random, preferential attachment, and small world) and see how this metric characterizes the nodes for each.
 
-```{r}
+```{r secret color chunk shhhh no one sees this degree, echo=F, warning=F, error=F}
+
+#eg
+color_num = data.frame(unique = degree(eg)); color_num
+color.unique = data.frame(colors = viridis(length(unique(color_num$unique))),
+                          unique = sort(unique(color_num$unique)));color.unique
+color_spectrum <- color_num %>%
+  full_join(color.unique); color_spectrum
+V(eg)$color = color_spectrum$colors
+
+#fg
+color_num = data.frame(unique = degree(fg)); color_num
+color.unique = data.frame(colors = viridis(length(unique(color_num$unique))),
+                          unique = sort(unique(color_num$unique)));color.unique
+color_spectrum <- color_num %>%
+  full_join(color.unique); color_spectrum
+V(fg)$color = color_spectrum$colors
+
+#ws
+color_num = data.frame(unique = degree(ws)); color_num
+color.unique = data.frame(colors = viridis(length(unique(color_num$unique))),
+                          unique = sort(unique(color_num$unique)));color.unique
+color_spectrum <- color_num %>%
+  full_join(color.unique); color_spectrum
+V(ws)$color = color_spectrum$colors
+
+#er
+color_num = data.frame(unique = degree(er)); color_num
+color.unique = data.frame(colors = viridis(length(unique(color_num$unique))),
+                          unique = sort(unique(color_num$unique)));color.unique
+color_spectrum <- color_num %>%
+  full_join(color.unique); color_spectrum
+V(er)$color = color_spectrum$colors
+
+
+#ba
+color_num = data.frame(unique = degree(ba, mode = "in")); color_num
+color.unique = data.frame(colors = viridis(length(unique(color_num$unique))),
+                          unique = sort(unique(color_num$unique)));color.unique
+color_spectrum <- color_num %>%
+  full_join(color.unique); color_spectrum
+V(ba)$color = color_spectrum$colors
+
 
 ```
 
 
-
+```{r}
+plot(eg, vertex.size=10, vertex.label=NA, layout = coords, main = "Degree: Empty Graph")
+plot(fg, vertex.size=10, vertex.label=NA,  layout = coords, main = "Degree: Full Graph")
+plot(er, vertex.size=10, vertex.label=NA,  layout = coords, main = "Degree: Erdos Renyi Random")
+plot(ba, vertex.size=10, vertex.label=NA,  layout = coords, main = "In Degree: Barabasi Albert Preferential Attachment")
+plot(ws, vertex.size=10, vertex.label=NA,  layout = coords, main = "Degree: Watts Strogatz Small World")
+```
 
 
 
 ## Eigenvector Centrality 
 
-A weighted sum reflecting both direct links to a node (degree) and the node degree of neighbors
-
-
-
-
+A weighted sum reflecting both direct links to a node (degree) and the node degree of neighbors. I couldn't for the life of me figure out how to fill these in meaningfully using base R, so we'll have to skip this set of graphs (sorry!)
 
 
 
 ## Betweenness Centrality 
 
-The number of shortest paths through the network of which a node is a part
+The number of shortest paths through the network of which a node is a part. 
+
+```{r secret color chunk shhhh no one sees this betweenness, echo=F, warning=F, error=F}
+
+#eg
+color_num = data.frame(unique = betweenness(eg)); color_num
+color.unique = data.frame(colors = viridis(length(unique(color_num$unique))),
+                          unique = sort(unique(color_num$unique)));color.unique
+color_spectrum <- color_num %>%
+  full_join(color.unique); color_spectrum
+V(eg)$color = color_spectrum$colors
+
+#fg
+color_num = data.frame(unique = betweenness(fg)); color_num
+color.unique = data.frame(colors = viridis(length(unique(color_num$unique))),
+                          unique = sort(unique(color_num$unique)));color.unique
+color_spectrum <- color_num %>%
+  full_join(color.unique); color_spectrum
+V(fg)$color = color_spectrum$colors
+
+#ws
+color_num = data.frame(unique = betweenness(ws)); color_num
+color.unique = data.frame(colors = viridis(length(unique(color_num$unique))),
+                          unique = sort(unique(color_num$unique)));color.unique
+color_spectrum <- color_num %>%
+  full_join(color.unique); color_spectrum
+V(ws)$color = color_spectrum$colors
+
+#er
+color_num = data.frame(unique = betweenness(er)); color_num
+color.unique = data.frame(colors = viridis(length(unique(color_num$unique))),
+                          unique = sort(unique(color_num$unique)));color.unique
+color_spectrum <- color_num %>%
+  full_join(color.unique); color_spectrum
+V(er)$color = color_spectrum$colors
 
 
+#ba
+color_num = data.frame(unique = betweenness(ba)); color_num
+color.unique = data.frame(colors = viridis(length(unique(color_num$unique))),
+                          unique = sort(unique(color_num$unique)));color.unique
+color_spectrum <- color_num %>%
+  full_join(color.unique); color_spectrum
+V(ba)$color = color_spectrum$colors
+
+
+```
+
+
+```{r}
+plot(eg, vertex.size=10, vertex.label=NA, layout = coords, main = "Betweenness: Empty Graph")
+plot(fg, vertex.size=10, vertex.label=NA,  layout = coords, main = "Betweenness: Full Graph")
+plot(er, vertex.size=10, vertex.label=NA,  layout = coords, main = "Betweenness: Erdos Renyi Random")
+plot(ba, vertex.size=10, vertex.label=NA,  layout = coords, main = "Betweenness: Barabasi Albert Preferential Attachment")
+plot(ws, vertex.size=10, vertex.label=NA,  layout = coords, main = "Betweenness: Watts Strogatz Small World")
+```
 
 
 
 ## Closeness Centrality 
 
-The inverse of the average length of the shortest path to/from all the other nodes in the network
+Closeness measures the inverse of the average length of the shortest path to/from all the other nodes in the network.
 
 
+```{r secret color chunk shhhh no one sees this closeness, echo=F, warning=F, error=F}
+
+#eg
+color_num = data.frame(unique = closeness(eg)); color_num
+color.unique = data.frame(colors = viridis(length(unique(color_num$unique))),
+                          unique = sort(unique(color_num$unique)));color.unique
+color_spectrum <- color_num %>%
+  full_join(color.unique); color_spectrum
+V(eg)$color = color_spectrum$colors
+
+#fg
+color_num = data.frame(unique = closeness(fg)); color_num
+color.unique = data.frame(colors = viridis(length(unique(color_num$unique))),
+                          unique = sort(unique(color_num$unique)));color.unique
+color_spectrum <- color_num %>%
+  full_join(color.unique); color_spectrum
+V(fg)$color = color_spectrum$colors
+
+#ws
+color_num = data.frame(unique = closeness(ws)); color_num
+color.unique = data.frame(colors = viridis(length(unique(color_num$unique))),
+                          unique = sort(unique(color_num$unique)));color.unique
+color_spectrum <- color_num %>%
+  full_join(color.unique); color_spectrum
+V(ws)$color = color_spectrum$colors
+
+#er
+color_num = data.frame(unique = closeness(er)); color_num
+color.unique = data.frame(colors = viridis(length(unique(color_num$unique))),
+                          unique = sort(unique(color_num$unique)));color.unique
+color_spectrum <- color_num %>%
+  full_join(color.unique); color_spectrum
+V(er)$color = color_spectrum$colors
 
 
+#ba
+color_num = data.frame(unique = closeness(ba)); color_num
+color.unique = data.frame(colors = viridis(length(unique(color_num$unique))),
+                          unique = sort(unique(color_num$unique)));color.unique
+color_spectrum <- color_num %>%
+  full_join(color.unique); color_spectrum
+V(ba)$color = color_spectrum$colors
+
+
+```
+
+
+```{r}
+plot(eg, vertex.size=10, vertex.label=NA, layout = coords, main = "Closeness: Empty Graph")
+plot(fg, vertex.size=10, vertex.label=NA,  layout = coords, main = "Closeness: Full Graph")
+plot(er, vertex.size=10, vertex.label=NA,  layout = coords, main = "Closeness: Erdos Renyi Random")
+plot(ba, vertex.size=10, vertex.label=NA,  layout = coords, main = "Closeness: Barabasi Albert Preferential Attachment")
+plot(ws, vertex.size=10, vertex.label=NA,  layout = coords, main = "Closeness: Watts Strogatz Small World")
+```
+
+
+# Cluster Detection
+
+You oftentimes want to figure out if nodes that are attached to one another are part of the same cluster. There are several different clustering algorithms in igraph depending on how long you want the process to take. Let's use a fast and greedy algorithm on our ER graph and see if we can detect clusters, then let's compare it to another type of clustering, .
+
+```{r clustering greedy}
+coords_er <- layout.fruchterman.reingold(er)
+plot(cluster_fast_greedy(er), er, coords = coords_er)
+```
+
+Now lets look at **betweenness** clustering.
+
+
+```{r clustering betweenness}
+plot(cluster_edge_betweenness(er), er, coords = coords_er)
+```
+
+And finally lets look at clustering that is based on minimizing a random walk.
+
+```{r clustering infomap}
+plot(cluster_infomap(er), er, coords = coords_er)
+```
+
+# Epidemic Models in Networks
+
+I am running out of time to write these notes, so I will refer you to Karen Garrett's amazing workshop notes on how to use matrix multiplication to model how a disease would spread in a network.
+
+https://kelseyandersen.github.io/NetworksPlantPathology/EpidemicNetworks.html
 
 
 ## Thanks and Acknowledgments
